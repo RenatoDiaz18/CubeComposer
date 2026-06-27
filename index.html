@@ -205,6 +205,21 @@
                 transform: scale(0.98);
             }
 
+            .function-btn:disabled,
+            .function-btn.used {
+                opacity: 0.4;
+                cursor: not-allowed;
+                background: var(--bg-tertiary);
+                border-color: var(--ui-border);
+                transform: none;
+            }
+
+            .function-btn:disabled:hover,
+            .function-btn.used:hover {
+                background: var(--bg-tertiary);
+                transform: none;
+            }
+
             /* Lista del programa */
             #program-list {
                 display: flex;

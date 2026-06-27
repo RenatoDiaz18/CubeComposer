@@ -994,18 +994,59 @@ class UIManager {
     // Agregar transformador al programa
     addTransformerToProgram(id, name) {
         if (!this.currentProgram) this.currentProgram = [];
+        
+        // Cada función solo se puede usar una vez
+        if (this.currentProgram.some(t => t.id === id)) {
+            console.log('[UIManager] Función ya usada:', id);
+            return;
+        }
+        
         this.currentProgram.push({ id, name });
         this.updateProgramList();
         this.runProgram();
         gameState.incrementSteps();
+        
+        // Deshabilitar el botón de la función usada
+        this.disableFunctionButton(id);
     }
 
     // Remover transformador del programa
     removeTransformerFromProgram(index) {
         if (!this.currentProgram) return;
-        this.currentProgram.splice(index, 1);
+        const removed = this.currentProgram.splice(index, 1)[0];
         this.updateProgramList();
         this.runProgram();
+        
+        // Habilitar de nuevo el botón de la función removida
+        if (removed) {
+            this.enableFunctionButton(removed.id);
+        }
+    }
+    
+    // Deshabilitar botón de función
+    disableFunctionButton(id) {
+        const btn = document.querySelector(`.function-btn[data-transformer-id="${id}"]`);
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('used');
+        }
+    }
+    
+    // Habilitar botón de función
+    enableFunctionButton(id) {
+        const btn = document.querySelector(`.function-btn[data-transformer-id="${id}"]`);
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('used');
+        }
+    }
+    
+    // Habilitar todos los botones de función
+    enableAllFunctionButtons() {
+        document.querySelectorAll('.function-btn').forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('used');
+        });
     }
 
     // Actualizar lista del programa actual
@@ -1263,6 +1304,9 @@ class UIManager {
         this.currentProgram = [];
         gameState.resetSteps();
         this.updateProgramList();
+        
+        // Habilitar todos los botones de función
+        this.enableAllFunctionButtons();
         
         // Volver a renderizar el muro inicial
         const levelData = LEVEL_DATA[this.currentLevelId];
