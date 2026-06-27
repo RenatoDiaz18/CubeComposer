@@ -791,6 +791,437 @@
             .hidden {
                 display: none !important;
             }
+
+            /* ========================================
+               RESPONSIVE - TABLETS (max 1024px)
+               ======================================== */
+            @media screen and (max-width: 1024px) {
+                .ui-sidebar {
+                    width: 240px;
+                    right: 10px;
+                }
+
+                .game-hud {
+                    left: 10px;
+                    padding: 12px 16px;
+                }
+
+                .hud-stats {
+                    gap: 12px;
+                    font-size: 0.8rem;
+                }
+            }
+
+            /* ========================================
+               RESPONSIVE - MÓVILES (max 768px)
+               ======================================== */
+            @media screen and (max-width: 768px) {
+                /* Header compacto */
+                .ui-header {
+                    padding: 12px 16px;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+
+                .game-title {
+                    font-size: 1.2rem;
+                }
+
+                .ui-btn {
+                    padding: 8px 12px;
+                    font-size: 0.8rem;
+                }
+
+                .ui-btn-icon {
+                    width: 36px;
+                    height: 36px;
+                }
+
+                /* Sidebar como bottom sheet */
+                .ui-sidebar {
+                    position: fixed;
+                    top: auto;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    width: 100%;
+                    max-height: 45vh;
+                    border-radius: 20px 20px 0 0;
+                    padding: 16px;
+                    overflow-y: auto;
+                    transform: translateY(0);
+                    transition: transform 0.3s ease;
+                }
+
+                .ui-sidebar.collapsed {
+                    transform: translateY(calc(100% - 50px));
+                }
+
+                .ui-sidebar h3 {
+                    font-size: 0.8rem;
+                    margin-bottom: 8px;
+                }
+
+                /* Drag handle para el sidebar móvil */
+                .ui-sidebar::before {
+                    content: "";
+                    display: block;
+                    width: 40px;
+                    height: 4px;
+                    background: var(--text-secondary);
+                    border-radius: 2px;
+                    margin: 0 auto 12px;
+                    opacity: 0.5;
+                }
+
+                /* Funciones en grid horizontal */
+                #available-functions {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 6px;
+                }
+
+                .function-btn {
+                    padding: 10px 8px;
+                    font-size: 0.75rem;
+                    text-align: center;
+                }
+
+                /* Program list horizontal */
+                #program-list {
+                    min-height: 44px;
+                    padding: 8px;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    gap: 4px;
+                }
+
+                .program-item {
+                    padding: 6px 10px;
+                    font-size: 0.7rem;
+                }
+
+                /* Game HUD compacto */
+                .game-hud {
+                    top: auto;
+                    bottom: 50vh;
+                    left: 10px;
+                    right: auto;
+                    padding: 10px 14px;
+                    max-width: 160px;
+                }
+
+                .hud-level {
+                    font-size: 0.65rem;
+                }
+
+                .hud-name {
+                    font-size: 0.85rem;
+                    margin-bottom: 8px;
+                }
+
+                .hud-stats {
+                    flex-direction: column;
+                    gap: 4px;
+                    font-size: 0.75rem;
+                }
+
+                /* Info panel reposicionado */
+                .info-panel {
+                    bottom: auto;
+                    top: 70px;
+                    left: auto;
+                    right: 10px;
+                    padding: 10px 14px;
+                    font-size: 0.75rem;
+                }
+
+                /* Modales más compactos */
+                .modal-content {
+                    padding: 20px;
+                    width: 95%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+
+                .modal-header h2 {
+                    font-size: 1.25rem;
+                }
+
+                /* Menú principal */
+                .menu-logo h1 {
+                    font-size: 1.8rem;
+                }
+
+                .menu-logo p {
+                    font-size: 0.8rem;
+                }
+
+                .menu-btn {
+                    padding: 14px 20px;
+                    font-size: 0.9rem;
+                }
+
+                /* Selector de niveles responsivo */
+                .level-selector-content {
+                    max-height: 85vh;
+                    padding: 16px;
+                }
+
+                .levels-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 8px;
+                }
+
+                .level-card {
+                    padding: 12px 8px;
+                    border-radius: 10px;
+                }
+
+                .level-number {
+                    font-size: 1rem;
+                }
+
+                .level-name {
+                    font-size: 0.65rem;
+                }
+
+                .star {
+                    font-size: 0.7rem;
+                }
+
+                /* Tutorial modal */
+                .tutorial-function {
+                    padding: 12px;
+                }
+
+                .tutorial-function-name {
+                    font-size: 1rem;
+                }
+
+                .tutorial-preview {
+                    height: 120px;
+                }
+
+                .tutorial-instructions {
+                    font-size: 0.8rem;
+                }
+
+                .tutorial-actions {
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .tutorial-btn {
+                    width: 100%;
+                    padding: 12px 16px;
+                }
+
+                /* Success modal */
+                .success-icon {
+                    font-size: 2.5rem;
+                }
+
+                .success-title {
+                    font-size: 1.4rem;
+                }
+
+                .success-star {
+                    font-size: 1.6rem;
+                }
+
+                .success-actions {
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .success-actions .menu-btn {
+                    width: 100%;
+                }
+
+                /* Settings modal */
+                .settings-select {
+                    font-size: 1rem;
+                    padding: 12px;
+                }
+
+                .toggle-switch {
+                    width: 46px;
+                    height: 24px;
+                }
+
+                .toggle-switch::after {
+                    width: 20px;
+                    height: 20px;
+                }
+
+                .toggle-switch.active::after {
+                    left: 24px;
+                }
+            }
+
+            /* ========================================
+               RESPONSIVE - MÓVILES PEQUEÑOS (max 480px)
+               ======================================== */
+            @media screen and (max-width: 480px) {
+                .ui-header {
+                    padding: 10px 12px;
+                }
+
+                .game-title {
+                    font-size: 1rem;
+                    flex: 1;
+                }
+
+                .ui-controls {
+                    gap: 8px;
+                }
+
+                .ui-btn {
+                    padding: 6px 10px;
+                    font-size: 0.75rem;
+                }
+
+                .ui-btn-icon {
+                    width: 32px;
+                    height: 32px;
+                }
+
+                /* Sidebar aún más compacto */
+                .ui-sidebar {
+                    max-height: 40vh;
+                    padding: 12px;
+                }
+
+                #available-functions {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+
+                .function-btn {
+                    padding: 8px 6px;
+                    font-size: 0.7rem;
+                }
+
+                /* HUD mínimo */
+                .game-hud {
+                    padding: 8px 10px;
+                    max-width: 140px;
+                }
+
+                .hud-level {
+                    font-size: 0.6rem;
+                }
+
+                .hud-name {
+                    font-size: 0.75rem;
+                }
+
+                /* Modales */
+                .modal-content {
+                    padding: 16px;
+                    border-radius: 12px;
+                }
+
+                .menu-logo h1 {
+                    font-size: 1.5rem;
+                }
+
+                .levels-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 6px;
+                }
+
+                .level-card {
+                    padding: 10px 6px;
+                }
+
+                .level-number {
+                    font-size: 0.9rem;
+                }
+
+                .level-stars {
+                    gap: 1px;
+                }
+            }
+
+            /* ========================================
+               LANDSCAPE MÓVIL
+               ======================================== */
+            @media screen and (max-width: 900px) and (orientation: landscape) {
+                .ui-sidebar {
+                    position: fixed;
+                    top: 60px;
+                    bottom: 10px;
+                    left: auto;
+                    right: 10px;
+                    width: 220px;
+                    max-height: none;
+                    border-radius: 12px;
+                    overflow-y: auto;
+                }
+
+                .ui-sidebar::before {
+                    display: none;
+                }
+
+                .game-hud {
+                    top: 60px;
+                    bottom: auto;
+                    left: 10px;
+                    max-width: 180px;
+                }
+
+                #available-functions {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .modal-content {
+                    max-height: 95vh;
+                    max-width: 90vw;
+                }
+
+                .levels-grid {
+                    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                }
+
+                .tutorial-preview {
+                    height: 100px;
+                }
+            }
+
+            /* ========================================
+               TOUCH IMPROVEMENTS
+               ======================================== */
+            @media (hover: none) and (pointer: coarse) {
+                /* Botones más grandes para touch */
+                .ui-btn,
+                .menu-btn,
+                .function-btn,
+                .tutorial-btn {
+                    min-height: 44px;
+                }
+
+                .level-card {
+                    min-height: 70px;
+                }
+
+                /* Eliminar hover effects que no funcionan en touch */
+                .function-btn:hover,
+                .level-card:hover:not(.locked),
+                .menu-btn:hover {
+                    transform: none;
+                }
+
+                /* Active states para feedback táctil */
+                .function-btn:active,
+                .level-card:active:not(.locked),
+                .menu-btn:active,
+                .ui-btn:active {
+                    transform: scale(0.95);
+                    opacity: 0.9;
+                }
+            }
         </style>
     </head>
     <body class="dark-mode">
@@ -1019,6 +1450,55 @@
                         }
                     }
                 }, 2000);
+                
+                // ========================================
+                // MOBILE SIDEBAR TOUCH HANDLER
+                // ========================================
+                var sidebar = document.querySelector('.ui-sidebar');
+                if (sidebar) {
+                    var touchStartY = 0;
+                    var touchCurrentY = 0;
+                    var isDragging = false;
+                    
+                    function isMobile() {
+                        return window.innerWidth <= 768 && window.matchMedia('(orientation: portrait)').matches;
+                    }
+                    
+                    sidebar.addEventListener('touchstart', function(e) {
+                        if (!isMobile()) return;
+                        touchStartY = e.touches[0].clientY;
+                        isDragging = true;
+                    }, { passive: true });
+                    
+                    sidebar.addEventListener('touchmove', function(e) {
+                        if (!isDragging || !isMobile()) return;
+                        touchCurrentY = e.touches[0].clientY;
+                    }, { passive: true });
+                    
+                    sidebar.addEventListener('touchend', function(e) {
+                        if (!isDragging || !isMobile()) return;
+                        isDragging = false;
+                        
+                        var deltaY = touchCurrentY - touchStartY;
+                        
+                        // Swipe down to collapse
+                        if (deltaY > 50) {
+                            sidebar.classList.add('collapsed');
+                        }
+                        // Swipe up to expand
+                        else if (deltaY < -50) {
+                            sidebar.classList.remove('collapsed');
+                        }
+                    });
+                    
+                    // Click on collapsed sidebar to expand
+                    sidebar.addEventListener('click', function(e) {
+                        if (!isMobile()) return;
+                        if (sidebar.classList.contains('collapsed')) {
+                            sidebar.classList.remove('collapsed');
+                        }
+                    });
+                }
             });
         </script>
     </body>
