@@ -3,18 +3,39 @@
   "description": "A puzzle game inspired by functional programming",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sharkdp/cube-composer.git"
+    "url": "git+https://github.com/sharkdp/cube-composer.git"
   },
   "author": "David Peter <mail@david-peter.de>",
   "license": "MIT",
   "homepage": "https://github.com/sharkdp/cube-composer",
   "devDependencies": {
+    "@tauri-apps/cli": "^2.11.3",
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
     "gulp-less": "^3.5.0",
     "gulp-purescript": "^2.0.0",
     "gulp-uglify": "^2.1.2",
-    "purescript": "0.11.6",
-    "rimraf": "^2.7.1"
+    "purescript": "^0.15.16",
+    "rimraf": "^2.7.1",
+    "spago": "^1.0.4",
+    "vite": "^8.1.0"
+  },
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "tauri": "tauri"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sharkdp/cube-composer/issues"
+  },
+  "dependencies": {
+    "three": "^0.185.0"
   }
 }

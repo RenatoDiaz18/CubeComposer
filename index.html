@@ -1,57 +1,922 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>cube composer</title>
+        <title>Cube Composer</title>
         <meta name="author" content="David Peter">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="A puzzle game inspired by functional programming.">
-        <link rel="stylesheet" type="text/css" href="dist/main.css">
-        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700">
         <link rel="icon" type="image/png" href="img/favicon-196.png" sizes="196x196">
         <link rel="icon" type="image/png" href="img/favicon-32.png" sizes="32x32">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+        <style>
+            /* ========================================
+               CSS VARIABLES - SISTEMA DE TEMAS
+               ======================================== */
+            :root {
+                /* Colores de cubos del juego */
+                --cube-cyan: #00bcd4;
+                --cube-brown: #795548;
+                --cube-red: #f44336;
+                --cube-orange: #ff9800;
+                --cube-yellow: #ffeb3b;
+                
+                /* Transiciones */
+                --transition-speed: 0.3s;
+            }
+
+            /* Tema Oscuro (por defecto) */
+            body, body.dark-mode {
+                --bg-primary: #1a1a2e;
+                --bg-secondary: #16213e;
+                --bg-tertiary: #0f3460;
+                --text-primary: #ffffff;
+                --text-secondary: #a0a0a0;
+                --accent-color: #e94560;
+                --ui-bg: rgba(22, 33, 62, 0.9);
+                --ui-border: rgba(233, 69, 96, 0.3);
+                --scene-bg: 0x1a1a2e;
+            }
+
+            /* Tema Claro */
+            body.light-mode {
+                --bg-primary: #f5f5f5;
+                --bg-secondary: #ffffff;
+                --bg-tertiary: #e0e0e0;
+                --text-primary: #1a1a2e;
+                --text-secondary: #666666;
+                --accent-color: #e94560;
+                --ui-bg: rgba(255, 255, 255, 0.95);
+                --ui-border: rgba(0, 0, 0, 0.1);
+                --scene-bg: 0xf0f0f0;
+            }
+
+            /* ========================================
+               ESTILOS BASE
+               ======================================== */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                overflow: hidden;
+                background-color: var(--bg-primary);
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                color: var(--text-primary);
+                transition: background-color var(--transition-speed);
+            }
+
+            #game-canvas {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 1;
+            }
+
+            /* ========================================
+               UI LAYER - Sobre el canvas 3D
+               ======================================== */
+            #ui-layer {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 10;
+                pointer-events: none;
+            }
+
+            #ui-layer > * {
+                pointer-events: auto;
+            }
+
+            /* Header */
+            .ui-header {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                padding: 20px 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: linear-gradient(to bottom, var(--ui-bg), transparent);
+            }
+
+            .game-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                letter-spacing: -0.5px;
+            }
+
+            .ui-controls {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+            }
+
+            /* Botones */
+            .ui-btn {
+                padding: 10px 16px;
+                border: 1px solid var(--ui-border);
+                border-radius: 8px;
+                background: var(--ui-bg);
+                color: var(--text-primary);
+                font-family: inherit;
+                font-size: 0.875rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all var(--transition-speed);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .ui-btn:hover {
+                background: var(--accent-color);
+                border-color: var(--accent-color);
+                color: white;
+            }
+
+            .ui-btn-icon {
+                width: 40px;
+                height: 40px;
+                padding: 0;
+                justify-content: center;
+                border-radius: 50%;
+            }
+
+            /* Panel lateral */
+            .ui-sidebar {
+                position: absolute;
+                top: 80px;
+                right: 20px;
+                width: 280px;
+                background: var(--ui-bg);
+                border: 1px solid var(--ui-border);
+                border-radius: 12px;
+                padding: 20px;
+                backdrop-filter: blur(10px);
+            }
+
+            .ui-sidebar h3 {
+                font-size: 0.875rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                margin-bottom: 12px;
+            }
+
+            /* Level selector */
+            .level-select {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1px solid var(--ui-border);
+                border-radius: 8px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                font-family: inherit;
+                font-size: 0.875rem;
+                cursor: pointer;
+                margin-bottom: 16px;
+            }
+
+            /* Info panel */
+            .info-panel {
+                position: absolute;
+                bottom: 20px;
+                left: 20px;
+                background: var(--ui-bg);
+                border: 1px solid var(--ui-border);
+                border-radius: 12px;
+                padding: 16px 20px;
+                backdrop-filter: blur(10px);
+                font-size: 0.875rem;
+            }
+
+            .info-panel .status {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #4caf50;
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+
+            /* ========================================
+               MODAL BASE (Tutorial, Éxito, etc.)
+               ======================================== */
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(5px);
+            }
+
+            .modal-overlay.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .modal-content {
+                background: var(--ui-bg);
+                border: 1px solid var(--ui-border);
+                border-radius: 16px;
+                padding: 30px 40px;
+                max-width: 500px;
+                width: 90%;
+                transform: scale(0.9) translateY(20px);
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            }
+
+            .modal-overlay.show .modal-content {
+                transform: scale(1) translateY(0);
+            }
+
+            .modal-header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.5rem;
+                margin-bottom: 8px;
+            }
+
+            .modal-header p {
+                color: var(--text-secondary);
+                font-size: 0.875rem;
+            }
+
+            /* ========================================
+               MENÚ PRINCIPAL
+               ======================================== */
+            #main-menu {
+                z-index: 200;
+            }
+
+            .menu-container {
+                text-align: center;
+                max-width: 400px;
+                width: 90%;
+            }
+
+            .menu-logo {
+                margin-bottom: 40px;
+            }
+
+            .menu-logo h1 {
+                font-size: 2.5rem;
+                font-weight: 700;
+                letter-spacing: -1px;
+                margin-bottom: 8px;
+            }
+
+            .menu-logo p {
+                color: var(--text-secondary);
+                font-size: 0.875rem;
+            }
+
+            .menu-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .menu-btn {
+                width: 100%;
+                padding: 16px 24px;
+                border: 1px solid var(--ui-border);
+                border-radius: 12px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                font-family: inherit;
+                font-size: 1rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all var(--transition-speed);
+            }
+
+            .menu-btn:hover {
+                background: var(--accent-color);
+                border-color: var(--accent-color);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+            .menu-btn-primary {
+                background: var(--accent-color);
+                border-color: var(--accent-color);
+                color: white;
+                font-size: 1.125rem;
+            }
+
+            /* ========================================
+               SELECTOR DE NIVELES
+               ======================================== */
+            #level-selector {
+                z-index: 150;
+            }
+
+            .level-selector-content {
+                max-width: 600px;
+                width: 95%;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            .chapter-section {
+                margin-bottom: 24px;
+            }
+
+            .chapter-title {
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-secondary);
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid var(--ui-border);
+            }
+
+            .levels-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 12px;
+            }
+
+            .level-card {
+                background: var(--bg-secondary);
+                border: 1px solid var(--ui-border);
+                border-radius: 12px;
+                padding: 16px;
+                text-align: center;
+                cursor: pointer;
+                transition: all var(--transition-speed);
+                position: relative;
+            }
+
+            .level-card:hover:not(.locked) {
+                border-color: var(--accent-color);
+                transform: translateY(-2px);
+            }
+
+            .level-card.locked {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .level-card.locked::after {
+                content: "🔒";
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                font-size: 0.75rem;
+            }
+
+            .level-number {
+                font-size: 1.25rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+            }
+
+            .level-stars {
+                display: flex;
+                justify-content: center;
+                gap: 2px;
+            }
+
+            .star {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+            }
+
+            .star.filled {
+                color: #ffc107;
+            }
+
+            .back-btn {
+                margin-top: 20px;
+            }
+
+            /* ========================================
+               MODAL DE TUTORIAL
+               ======================================== */
+            #tutorial-modal .modal-content {
+                max-width: 550px;
+            }
+
+            .tutorial-function {
+                background: var(--bg-tertiary);
+                border-radius: 8px;
+                padding: 16px;
+                margin: 16px 0;
+                text-align: center;
+            }
+
+            .tutorial-function-name {
+                font-family: 'Courier New', monospace;
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: var(--accent-color);
+            }
+
+            .tutorial-preview {
+                background: var(--bg-primary);
+                border-radius: 12px;
+                height: 150px;
+                margin: 20px 0;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .tutorial-preview canvas {
+                width: 100%;
+                height: 100%;
+            }
+
+            .tutorial-instructions {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+                margin-bottom: 20px;
+                line-height: 1.6;
+            }
+
+            .tutorial-actions {
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+            }
+
+            .tutorial-btn {
+                padding: 12px 24px;
+                border: 1px solid var(--ui-border);
+                border-radius: 8px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                font-family: inherit;
+                font-size: 0.875rem;
+                cursor: pointer;
+                transition: all var(--transition-speed);
+            }
+
+            .tutorial-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .tutorial-btn-primary {
+                background: var(--accent-color);
+                border-color: var(--accent-color);
+                color: white;
+            }
+
+            .tutorial-btn-primary:hover:not(:disabled) {
+                filter: brightness(1.1);
+            }
+
+            /* ========================================
+               MENSAJE DE ÉXITO CON ESTRELLAS
+               ======================================== */
+            .success-overlay {
+                z-index: 100;
+            }
+
+            .success-content {
+                text-align: center;
+            }
+
+            .success-icon {
+                font-size: 3rem;
+                margin-bottom: 16px;
+            }
+
+            .success-title {
+                font-size: 1.75rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #4caf50;
+            }
+
+            .success-subtitle {
+                color: var(--text-secondary);
+                margin-bottom: 20px;
+            }
+
+            .success-stars {
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .success-star {
+                font-size: 2rem;
+                color: var(--text-secondary);
+                transition: all 0.3s ease;
+            }
+
+            .success-star.earned {
+                color: #ffc107;
+                animation: starPop 0.3s ease;
+            }
+
+            @keyframes starPop {
+                0% { transform: scale(0); }
+                50% { transform: scale(1.3); }
+                100% { transform: scale(1); }
+            }
+
+            .success-stats {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+                margin-bottom: 24px;
+            }
+
+            .success-actions {
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+            }
+
+            /* ========================================
+               PANEL DE CONFIGURACIÓN
+               ======================================== */
+            #settings-modal .modal-content {
+                max-width: 400px;
+            }
+
+            .settings-group {
+                margin-bottom: 20px;
+            }
+
+            .settings-label {
+                font-size: 0.875rem;
+                font-weight: 500;
+                margin-bottom: 8px;
+                display: block;
+            }
+
+            .settings-select {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1px solid var(--ui-border);
+                border-radius: 8px;
+                background: var(--bg-secondary);
+                color: var(--text-primary);
+                font-family: inherit;
+                font-size: 0.875rem;
+            }
+
+            .settings-toggle {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 0;
+            }
+
+            .toggle-switch {
+                width: 50px;
+                height: 26px;
+                background: var(--bg-tertiary);
+                border-radius: 13px;
+                position: relative;
+                cursor: pointer;
+                transition: all var(--transition-speed);
+            }
+
+            .toggle-switch.active {
+                background: var(--accent-color);
+            }
+
+            .toggle-switch::after {
+                content: "";
+                position: absolute;
+                width: 22px;
+                height: 22px;
+                background: white;
+                border-radius: 50%;
+                top: 2px;
+                left: 2px;
+                transition: all var(--transition-speed);
+            }
+
+            .toggle-switch.active::after {
+                left: 26px;
+            }
+
+            /* ========================================
+               GAME HUD - Durante el juego
+               ======================================== */
+            .game-hud {
+                position: absolute;
+                top: 80px;
+                left: 20px;
+                background: var(--ui-bg);
+                border: 1px solid var(--ui-border);
+                border-radius: 12px;
+                padding: 16px 20px;
+                backdrop-filter: blur(10px);
+            }
+
+            .hud-level {
+                font-size: 0.75rem;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .hud-name {
+                font-size: 1rem;
+                font-weight: 600;
+                margin-bottom: 12px;
+            }
+
+            .hud-stats {
+                display: flex;
+                gap: 20px;
+                font-size: 0.875rem;
+            }
+
+            .hud-stat {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .hud-stat-icon {
+                opacity: 0.7;
+            }
+
+            /* ========================================
+               HIDDEN STATE
+               ======================================== */
+            .hidden {
+                display: none !important;
+            }
+        </style>
     </head>
-    <body>
-        <div id="container">
-            <div id="logo"><img src="img/cube-composer.svg" width="200" height="35" alt="cube composer"></div>
-            <div id="panel">
-                <b>Choose level:</b><br>
-                <select id="levels"></select>
-                <b>Goal:</b>
-                <div id="goal"></div>
-                <p id="help"></p>
-            </div>
-            <div id="message">
-                <span id="solved" class="animated">Solved ✓</span>
-                <div class="buttons"><a id="nextlevel" class="button"><u>N</u>ext level</a></div>
-            </div>
-            <canvas id="canvas" width="1600" height="860"></canvas>
-            <div id="controls">
-                <div class="controlBox left">
-                    <ul id="available" class="sortable"></ul>
+    <body class="dark-mode">
+        <!-- Canvas 3D -->
+        <div id="game-canvas"></div>
+
+        <!-- ========================================
+             MENÚ PRINCIPAL
+             ======================================== -->
+        <div id="main-menu" class="modal-overlay show">
+            <div class="menu-container">
+                <div class="menu-logo">
+                    <h1>Cube Composer</h1>
+                    <p>Un juego de puzzles inspirado en programación funcional</p>
                 </div>
-                <div class="controlBox right">
-                    <ul id="program" class="sortable"></ul>
-                    <div class="buttons">
-                        <a class="button" id="reset"><u>R</u>eset</a>
+                <div class="menu-buttons">
+                    <button id="btn-play" class="menu-btn menu-btn-primary">▶ Jugar</button>
+                    <button id="btn-settings" class="menu-btn">⚙ Configuración</button>
+                    <button id="btn-exit" class="menu-btn">✕ Salir</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================
+             SELECTOR DE NIVELES
+             ======================================== -->
+        <div id="level-selector" class="modal-overlay">
+            <div class="modal-content level-selector-content">
+                <div class="modal-header">
+                    <h2>Seleccionar Nivel</h2>
+                    <p>Completa niveles para desbloquear nuevos desafíos</p>
+                </div>
+                <div id="chapters-container">
+                    <!-- Se genera dinámicamente -->
+                </div>
+                <button id="btn-back-menu" class="menu-btn back-btn">← Volver al Menú</button>
+            </div>
+        </div>
+
+        <!-- ========================================
+             MODAL DE CONFIGURACIÓN
+             ======================================== -->
+        <div id="settings-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Configuración</h2>
+                </div>
+                <div class="settings-group">
+                    <label class="settings-label">Idioma</label>
+                    <select id="language-select" class="settings-select">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="settings-group">
+                    <div class="settings-toggle">
+                        <span class="settings-label">Tema Oscuro</span>
+                        <div id="theme-toggle-settings" class="toggle-switch active"></div>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <div class="settings-toggle">
+                        <span class="settings-label">Sonido</span>
+                        <div id="sound-toggle" class="toggle-switch active"></div>
+                    </div>
+                </div>
+                <button id="btn-close-settings" class="menu-btn" style="margin-top: 20px;">Guardar y Cerrar</button>
+            </div>
+        </div>
+
+        <!-- ========================================
+             MODAL DE TUTORIAL
+             ======================================== -->
+        <div id="tutorial-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="tutorial-title">Nueva Función</h2>
+                    <p id="tutorial-subtitle">Aprende a usar esta transformación</p>
+                </div>
+                <div class="tutorial-function">
+                    <span id="tutorial-function-name" class="tutorial-function-name">map {Yellow}↦{Red}</span>
+                </div>
+                <p id="tutorial-description" class="tutorial-instructions">
+                    Esta función transforma todos los cubos amarillos en cubos rojos.
+                    Pruébala en el ejemplo de abajo.
+                </p>
+                <div id="tutorial-preview" class="tutorial-preview">
+                    <canvas id="tutorial-canvas"></canvas>
+                </div>
+                <div class="tutorial-actions">
+                    <button id="btn-apply-tutorial" class="tutorial-btn">Aplicar Función</button>
+                    <button id="btn-start-level" class="tutorial-btn tutorial-btn-primary" disabled>Comenzar Nivel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================
+             MODAL DE ÉXITO
+             ======================================== -->
+        <div id="success-modal" class="modal-overlay success-overlay">
+            <div class="modal-content success-content">
+                <div class="success-icon">🎉</div>
+                <h2 class="success-title">¡Nivel Completado!</h2>
+                <p id="success-level-name" class="success-subtitle">Transformación</p>
+                <div class="success-stars">
+                    <span id="star-1" class="success-star">★</span>
+                    <span id="star-2" class="success-star">★</span>
+                    <span id="star-3" class="success-star">★</span>
+                </div>
+                <p id="success-stats" class="success-stats">Movimientos: 3 / Ideal: 2</p>
+                <div class="success-actions">
+                    <button id="btn-replay" class="menu-btn">↺ Reintentar</button>
+                    <button id="btn-next-level" class="menu-btn menu-btn-primary">Siguiente →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================
+             UI DE JUEGO (HUD)
+             ======================================== -->
+        <div id="game-ui" class="hidden">
+            <!-- Header del juego -->
+            <header class="ui-header">
+                <div>
+                    <button id="btn-back-levels" class="ui-btn">← Niveles</button>
+                </div>
+                <h1 class="game-title">Cube Composer</h1>
+                <div class="ui-controls">
+                    <button id="game-theme-toggle" class="ui-btn ui-btn-icon" title="Cambiar tema">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+                        </svg>
+                    </button>
+                    <button id="game-reset-camera" class="ui-btn">Reset Cámara</button>
+                </div>
+            </header>
+
+            <!-- HUD del nivel -->
+            <div class="game-hud">
+                <div class="hud-level">Nivel <span id="hud-level-id">0.1</span></div>
+                <div id="hud-level-name" class="hud-name">Transformación</div>
+                <div class="hud-stats">
+                    <div class="hud-stat">
+                        <span class="hud-stat-icon">📊</span>
+                        <span>Movimientos: <strong id="hud-steps">0</strong></span>
+                    </div>
+                    <div class="hud-stat">
+                        <span class="hud-stat-icon">⭐</span>
+                        <span>Ideal: <strong id="hud-ideal">2</strong></span>
                     </div>
                 </div>
             </div>
-            <p class="footer">
-                A game by <a href="https://david-peter.de/">David Peter</a>. Source code on <a href="https://github.com/sharkdp/cube-composer">GitHub</a>.<br>
-                <iframe id="ghstars" src="https://ghbtns.com/github-btn.html?user=sharkdp&amp;repo=cube-composer&amp;type=star&amp;count=true" style="width: 96px; height: 20px; border: none; overflow: hidden"></iframe>
-            </p>
+
+            <!-- Sidebar del juego -->
+            <aside class="ui-sidebar">
+                <h3>Objetivo</h3>
+                <div id="goal-preview" class="tutorial-preview" style="height: 100px; margin-bottom: 16px;"></div>
+                
+                <h3>Funciones Disponibles</h3>
+                <div id="available-functions">
+                    <!-- Se genera dinámicamente -->
+                </div>
+                
+                <h3 style="margin-top: 16px;">Tu Programa</h3>
+                <div id="program-list">
+                    <!-- Se genera dinámicamente -->
+                </div>
+                
+                <div style="margin-top: 16px; display: flex; gap: 8px;">
+                    <button id="btn-reset-program" class="ui-btn" style="flex: 1;">↺ Reset</button>
+                    <button id="btn-run-program" class="ui-btn" style="flex: 1; background: var(--accent-color); border-color: var(--accent-color); color: white;">▶ Ejecutar</button>
+                </div>
+            </aside>
+
+            <!-- Info Panel -->
+            <div class="info-panel">
+                <div class="status">
+                    <span class="status-dot"></span>
+                    <span id="engine-status">Motor 3D activo</span>
+                </div>
+            </div>
         </div>
 
-        <script type="text/javascript" src="dist/main.js"></script>
+        <script type="module" src="/src/index.js"></script>
+        
+        <!-- Fallback básico si el módulo principal falla -->
         <script>
-            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-            ga('create', 'UA-39945208-2', 'david-peter.de');
-            ga('send', 'pageview');
+            // Asegurar que el menú sea visible si JS principal falla
+            window.addEventListener('error', function(e) {
+                console.error('[Fallback] Error detectado:', e.message);
+                var menu = document.getElementById('main-menu');
+                if (menu) menu.classList.add('show');
+            });
+            
+            // Fallback para botones del menú
+            document.addEventListener('DOMContentLoaded', function() {
+                var btnPlay = document.getElementById('btn-play');
+                var btnSettings = document.getElementById('btn-settings');
+                var btnBackMenu = document.getElementById('btn-back-menu');
+                var btnCloseSettings = document.getElementById('btn-close-settings');
+                
+                // Si después de 2 segundos UIManager no existe, configurar fallbacks
+                setTimeout(function() {
+                    if (!window.uiManager) {
+                        console.log('[Fallback] UIManager no disponible, activando fallbacks');
+                        
+                        if (btnPlay) {
+                            btnPlay.onclick = function() {
+                                document.getElementById('main-menu').classList.remove('show');
+                                document.getElementById('level-selector').classList.add('show');
+                            };
+                        }
+                        
+                        if (btnSettings) {
+                            btnSettings.onclick = function() {
+                                document.getElementById('main-menu').classList.remove('show');
+                                document.getElementById('settings-modal').classList.add('show');
+                            };
+                        }
+                        
+                        if (btnBackMenu) {
+                            btnBackMenu.onclick = function() {
+                                document.getElementById('level-selector').classList.remove('show');
+                                document.getElementById('main-menu').classList.add('show');
+                            };
+                        }
+                        
+                        if (btnCloseSettings) {
+                            btnCloseSettings.onclick = function() {
+                                document.getElementById('settings-modal').classList.remove('show');
+                                document.getElementById('main-menu').classList.add('show');
+                            };
+                        }
+                    }
+                }, 2000);
+            });
         </script>
     </body>
 </html>
