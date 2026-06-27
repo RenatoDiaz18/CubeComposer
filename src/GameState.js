@@ -373,27 +373,302 @@ class GameState {
 }
 
 // ============================================================================
-// DATOS DE NIVELES (idealSteps)
+// TRANSFORMADORES POR CAPÍTULO (Originales de PureScript)
+// ============================================================================
+
+export const CHAPTER_TRANSFORMERS = {
+    0: [ // Introduction
+        { id: 'replaceYbyR', name: 'map {Yellow}↦{Red}' },
+        { id: 'stackY', name: 'map (stack {Yellow})' },
+        { id: 'replaceYbyYR', name: 'map {Yellow}↦[{Red}{Yellow}]' },
+        { id: 'rejectY', name: 'map (reject {Yellow})' }
+    ],
+    1: [ // Chapter 1
+        { id: 'mapYtoYR', name: 'map {Yellow}↦[{Red}{Yellow}]' },
+        { id: 'mapCtoRC', name: 'map {Cyan}↦[{Cyan}{Red}]' },
+        { id: 'rejectY', name: 'map (reject {Yellow})' },
+        { id: 'rejectC', name: 'map (reject {Cyan})' },
+        { id: 'filterContainsR', name: 'filter (contains {Red})' },
+        { id: 'stackR', name: 'map (stack {Red})' },
+        { id: 'mapReverse', name: 'map reverse' }
+    ],
+    2: [ // Chapter 2
+        { id: 'replaceYbyB', name: 'map {Yellow}↦{Brown}' },
+        { id: 'replaceYbyBY', name: 'map {Yellow}↦[{Yellow}{Brown}]' },
+        { id: 'replaceBbyOO', name: 'map {Brown}↦[{Orange}{Orange}]' },
+        { id: 'rejectO', name: 'map (reject {Orange})' },
+        { id: 'stackY', name: 'map (stack {Yellow})' },
+        { id: 'stackEqualColumns', name: 'stackEqualColumns' }
+    ],
+    3: [ // Chapter 3
+        { id: 'mapXtoOX', name: 'map {X}↦[{X}{Orange}]' },
+        { id: 'mapCXtoX', name: 'map [{X}{Cyan}]↦{X}' },
+        { id: 'mapOOtoC', name: 'map [{Orange}{Orange}]↦{Cyan}' },
+        { id: 'mapCtoO', name: 'map {Cyan}↦{Orange}' }
+    ],
+    4: [ // Chapter 4
+        { id: 'replaceYbyR', name: 'map {Yellow}↦{Red}' },
+        { id: 'replaceRbyC', name: 'map {Red}↦{Cyan}' },
+        { id: 'replaceCbyY', name: 'map {Cyan}↦{Yellow}' },
+        { id: 'partitionContainsC', name: 'partition (contains {Cyan})' },
+        { id: 'partitionContainsR', name: 'partition (contains {Red})' }
+    ],
+    5: [ // Chapter 5 - Binary
+        { id: 'mapAdd1', name: 'map (+1)' },
+        { id: 'mapSub1', name: 'map (-1)' },
+        { id: 'mapMul2', name: 'map (×2)' },
+        { id: 'mapPow2', name: 'map (^2)' },
+        { id: 'filterEven', name: 'filter even' }
+    ]
+};
+
+// ============================================================================
+// DATOS DE NIVELES COMPLETOS (Originales de PureScript)
 // ============================================================================
 
 export const LEVEL_DATA = {
-    // Chapter 0 - Introduction
-    '0.1': { name: 'Transformation', idealSteps: 1, chapter: 'Introduction' },
-    '0.2': { name: 'Rejection', idealSteps: 1, chapter: 'Introduction' },
-    '0.3': { name: 'Composition', idealSteps: 2, chapter: 'Introduction' },
-    '0.4': { name: 'Spanish flag', idealSteps: 3, chapter: 'Introduction' },
+    // ========== Chapter 0 - Introduction ==========
+    '0.1': { 
+        name: 'Transformation', 
+        idealSteps: 1, 
+        chapter: 0,
+        help: 'En este juego, tu objetivo es crear una secuencia de funciones que transforme los cubos de colores en el patrón deseado. Para cambiar cubos amarillos a rojos, agrega la función replaceYbyR a tu programa.',
+        initial: [['Yellow', 'Yellow', 'Red'], ['Yellow', 'Red'], ['Red'], ['Red'], ['Yellow', 'Red'], ['Yellow', 'Yellow', 'Red']],
+        target: [['Red', 'Red', 'Red'], ['Red', 'Red'], ['Red'], ['Red'], ['Red', 'Red'], ['Red', 'Red', 'Red']]
+    },
+    '0.2': { 
+        name: 'Rejection', 
+        idealSteps: 1, 
+        chapter: 0,
+        help: 'Para remover todos los cubos de un color específico, usa la función reject.',
+        initial: [['Yellow', 'Yellow', 'Red'], ['Yellow', 'Red'], ['Red'], ['Red'], ['Yellow', 'Red'], ['Yellow', 'Yellow', 'Red']],
+        target: [['Red'], ['Red'], ['Red'], ['Red'], ['Red'], ['Red']]
+    },
+    '0.3': { 
+        name: 'Composition', 
+        idealSteps: 2, 
+        chapter: 0,
+        help: 'La mayoría de niveles requieren una combinación de dos o más funciones. Intenta agregar las funciones stackY y rejectY a tu programa.',
+        initial: [['Yellow', 'Yellow', 'Red'], ['Yellow', 'Red'], ['Red'], ['Red'], ['Yellow', 'Red'], ['Yellow', 'Yellow', 'Red']],
+        target: [['Red', 'Yellow'], ['Red', 'Yellow'], ['Red', 'Yellow'], ['Red', 'Yellow'], ['Red', 'Yellow'], ['Red', 'Yellow']]
+    },
+    '0.4': { 
+        name: 'Spanish flag', 
+        idealSteps: 3, 
+        chapter: 0,
+        help: 'Intenta esto por tu cuenta. Necesitas componer tres funciones.',
+        initial: [['Yellow', 'Yellow', 'Red'], ['Yellow', 'Red'], ['Red'], ['Red'], ['Yellow', 'Red'], ['Yellow', 'Yellow', 'Red']],
+        target: [['Red', 'Yellow', 'Red'], ['Red', 'Yellow', 'Red'], ['Red', 'Yellow', 'Red'], ['Red', 'Yellow', 'Red'], ['Red', 'Yellow', 'Red'], ['Red', 'Yellow', 'Red']]
+    },
     
-    // Chapter 1 - Basics (placeholder)
-    '1.1': { name: 'Stack it up', idealSteps: 2, chapter: 'Basics' },
-    '1.2': { name: 'Filter', idealSteps: 2, chapter: 'Basics' },
-    '1.3': { name: 'Combine', idealSteps: 3, chapter: 'Basics' },
-    '1.4': { name: 'Challenge', idealSteps: 3, chapter: 'Basics' },
+    // ========== Chapter 1 ==========
+    '1.1': { 
+        name: 'Mercury', 
+        idealSteps: 2, 
+        chapter: 1,
+        help: 'Hay algunos nuevos tipos de funciones en este capítulo. Los introduciremos cuando sean necesarios.',
+        initial: [['Red', 'Red'], ['Red', 'Yellow'], ['Cyan', 'Yellow'], ['Cyan', 'Cyan']],
+        target: [['Red', 'Red', 'Red'], ['Red', 'Yellow', 'Red'], ['Red', 'Yellow', 'Red'], ['Red', 'Red', 'Red']]
+    },
+    '1.2': { 
+        name: 'Venus', 
+        idealSteps: 2, 
+        chapter: 1,
+        help: 'La función filterContainsR elimina columnas sin un cubo rojo.',
+        initial: [['Red', 'Red'], ['Red', 'Yellow'], ['Cyan', 'Yellow'], ['Cyan', 'Cyan']],
+        target: [['Red', 'Red'], ['Red', 'Red']]
+    },
+    '1.3': { 
+        name: 'Earth', 
+        idealSteps: 2, 
+        chapter: 1,
+        help: 'Puedes voltear cada columna verticalmente con mapReverse.',
+        initial: [['Cyan', 'Cyan', 'Yellow'], ['Cyan', 'Red'], ['Cyan', 'Red'], ['Cyan', 'Cyan', 'Yellow']],
+        target: [['Red', 'Cyan', 'Cyan'], ['Red', 'Cyan'], ['Red', 'Cyan'], ['Red', 'Cyan', 'Cyan']]
+    },
+    '1.4': { 
+        name: 'Mars', 
+        idealSteps: 3, 
+        chapter: 1,
+        help: 'Por si te lo preguntabas: los nombres de los niveles tienen un significado filosófico profundo... o son elegidos al azar.',
+        initial: [['Red', 'Red'], ['Red', 'Yellow'], ['Cyan', 'Yellow'], ['Cyan', 'Cyan']],
+        target: [['Red', 'Red'], ['Red', 'Red'], ['Red', 'Red'], ['Red', 'Red']]
+    },
     
-    // Chapter 2 (placeholder)
-    '2.1': { name: 'Advanced 1', idealSteps: 3, chapter: 'Advanced' },
-    '2.2': { name: 'Advanced 2', idealSteps: 4, chapter: 'Advanced' },
-    '2.3': { name: 'Advanced 3', idealSteps: 4, chapter: 'Advanced' },
-    '2.4': { name: 'Advanced 4', idealSteps: 5, chapter: 'Advanced' }
+    // ========== Chapter 2 ==========
+    '2.1': { 
+        name: 'Bricklayer', 
+        idealSteps: 2, 
+        chapter: 2,
+        help: 'Este capítulo introduce una nueva función stackEqualColumns. Toma columnas adyacentes iguales y las apila una sobre otra. ¡Pruébalo!',
+        initial: [['Brown'], ['Orange'], ['Orange'], ['Yellow'], ['Yellow'], ['Yellow'], ['Orange'], ['Orange'], ['Brown']],
+        target: [['Brown'], ['Orange', 'Orange'], ['Brown', 'Brown', 'Brown'], ['Orange', 'Orange'], ['Brown']]
+    },
+    '2.2': { 
+        name: 'Gizeh', 
+        idealSteps: 3, 
+        chapter: 2,
+        help: 'Ahora estás solo...',
+        initial: [['Brown'], ['Orange'], ['Orange'], ['Yellow'], ['Yellow'], ['Yellow'], ['Orange'], ['Orange'], ['Brown']],
+        target: [['Brown', 'Brown'], ['Orange', 'Brown', 'Orange', 'Brown'], ['Brown', 'Brown', 'Brown', 'Brown', 'Brown', 'Brown'], ['Orange', 'Brown', 'Orange', 'Brown'], ['Brown', 'Brown']]
+    },
+    '2.3': { 
+        name: 'Poseidon', 
+        idealSteps: 4, 
+        chapter: 2,
+        initial: [['Brown'], ['Orange'], ['Orange'], ['Yellow'], ['Yellow'], ['Yellow'], ['Orange'], ['Orange'], ['Brown']],
+        target: [['Brown', 'Brown'], ['Brown'], ['Brown', 'Brown', 'Brown', 'Brown'], ['Brown'], ['Brown', 'Brown']]
+    },
+    '2.4': { 
+        name: 'Bowl', 
+        idealSteps: 4, 
+        chapter: 2,
+        initial: [['Brown'], ['Orange'], ['Orange'], ['Brown']],
+        target: [['Orange', 'Orange', 'Orange', 'Orange'], ['Orange', 'Orange'], ['Orange', 'Orange'], ['Orange', 'Orange', 'Orange', 'Orange']]
+    },
+    '2.5': { 
+        name: 'Stamp', 
+        idealSteps: 4, 
+        chapter: 2,
+        initial: [['Brown'], ['Orange'], ['Orange'], ['Yellow'], ['Yellow'], ['Yellow'], ['Orange'], ['Orange'], ['Brown']],
+        target: [['Yellow'], ['Yellow'], ['Yellow', 'Yellow', 'Yellow', 'Yellow'], ['Yellow'], ['Yellow']]
+    },
+    
+    // ========== Chapter 3 ==========
+    '3.1': { 
+        name: 'Brick', 
+        idealSteps: 2, 
+        chapter: 3,
+        help: 'Este capítulo introduce cubos comodín: {X}.',
+        initial: [['Cyan', 'Orange'], ['Cyan', 'Cyan', 'Orange'], ['Orange', 'Orange'], ['Cyan', 'Cyan', 'Orange'], ['Cyan', 'Orange']],
+        target: [['Cyan'], ['Cyan', 'Orange'], ['Cyan'], ['Cyan', 'Orange'], ['Cyan']]
+    },
+    '3.2': { 
+        name: 'Fort', 
+        idealSteps: 3, 
+        chapter: 3,
+        initial: [['Cyan', 'Orange'], ['Cyan', 'Cyan', 'Orange'], ['Orange', 'Orange'], ['Cyan', 'Cyan', 'Orange'], ['Cyan', 'Orange']],
+        target: [['Orange', 'Cyan'], ['Orange', 'Orange'], ['Orange', 'Cyan'], ['Orange', 'Orange'], ['Orange', 'Cyan']]
+    },
+    '3.3': { 
+        name: 'Castle', 
+        idealSteps: 3, 
+        chapter: 3,
+        initial: [['Orange'], ['Orange', 'Orange'], ['Orange', 'Orange', 'Orange'], ['Orange', 'Orange', 'Orange', 'Orange'], ['Orange', 'Orange', 'Orange'], ['Orange', 'Orange'], ['Orange']],
+        target: [['Orange', 'Orange'], ['Orange', 'Cyan'], ['Orange', 'Orange'], ['Orange', 'Cyan'], ['Orange', 'Orange'], ['Orange', 'Cyan'], ['Orange', 'Orange']]
+    },
+    
+    // ========== Chapter 4 ==========
+    '4.1': { 
+        name: 'Take sides!', 
+        idealSteps: 1, 
+        chapter: 4,
+        help: 'Este capítulo introduce la partición. La función partitionContainsR reordena las columnas para que las que no contienen un cubo rojo queden a la izquierda.',
+        initial: [['Cyan', 'Red'], ['Cyan', 'Cyan'], ['Red', 'Red'], ['Cyan', 'Cyan'], ['Cyan', 'Red']],
+        target: [['Cyan', 'Cyan'], ['Cyan', 'Cyan'], ['Cyan', 'Red'], ['Red', 'Red'], ['Cyan', 'Red']]
+    },
+    '4.2': { 
+        name: 'Take sides – again!', 
+        idealSteps: 2, 
+        chapter: 4,
+        help: 'Nota que dentro de cada partición, el orden permanece igual que antes de particionar.',
+        initial: [['Cyan', 'Red'], ['Cyan', 'Cyan'], ['Red', 'Red'], ['Cyan', 'Cyan'], ['Cyan', 'Red']],
+        target: [['Cyan', 'Cyan'], ['Cyan', 'Cyan'], ['Red', 'Red'], ['Cyan', 'Red'], ['Cyan', 'Red']]
+    },
+    '4.3': { 
+        name: 'Shift', 
+        idealSteps: 2, 
+        chapter: 4,
+        help: '¿Puedes particionar esto?',
+        initial: [['Cyan', 'Red'], ['Red', 'Cyan'], ['Cyan', 'Red'], ['Red', 'Cyan'], ['Cyan', 'Red']],
+        target: [['Red', 'Cyan'], ['Cyan', 'Red'], ['Red', 'Cyan'], ['Cyan', 'Red'], ['Red', 'Cyan']]
+    },
+    '4.4': { 
+        name: 'Robot eyes', 
+        idealSteps: 3, 
+        chapter: 4,
+        initial: [['Brown', 'Brown', 'Brown'], ['Brown', 'Yellow', 'Brown'], ['Brown', 'Brown', 'Brown'], ['Brown', 'Yellow', 'Brown'], ['Brown', 'Brown', 'Brown']],
+        target: [['Brown', 'Brown', 'Brown'], ['Brown', 'Brown', 'Brown'], ['Brown', 'Brown', 'Brown'], ['Brown', 'Yellow', 'Brown'], ['Brown', 'Yellow', 'Brown']]
+    },
+    '4.5': { 
+        name: 'Mountains', 
+        idealSteps: 4, 
+        chapter: 4,
+        initial: [['Brown', 'Brown', 'Red', 'Red'], ['Brown', 'Brown', 'Brown', 'Cyan'], ['Brown', 'Yellow', 'Yellow', 'Yellow'], ['Brown', 'Brown', 'Brown', 'Red'], ['Brown', 'Brown', 'Cyan', 'Cyan'], ['Brown', 'Brown', 'Yellow', 'Yellow']],
+        target: [['Brown', 'Cyan', 'Cyan', 'Cyan'], ['Brown', 'Brown', 'Cyan', 'Cyan'], ['Brown', 'Brown', 'Cyan', 'Cyan'], ['Brown', 'Brown', 'Brown', 'Cyan'], ['Brown', 'Brown', 'Brown', 'Cyan'], ['Brown', 'Brown', 'Cyan', 'Cyan']]
+    },
+    
+    // ========== Chapter 5 - Binary ==========
+    // Binary representation: Orange=0, Brown=1
+    // 0=[O,O,O], 1=[B,O,O], 2=[O,B,O], 3=[B,B,O], 4=[O,O,B], 5=[B,O,B], 6=[O,B,B], 7=[B,B,B]
+    '5.1': { 
+        name: '0b0 .. 0b111', 
+        idealSteps: 2, 
+        chapter: 5,
+        help: '¿Cuál podría ser el significado del título? Lee de arriba a abajo. Calcula módulo ocho.',
+        initial: [
+            ['Orange', 'Orange', 'Orange'], ['Brown', 'Orange', 'Orange'], 
+            ['Orange', 'Brown', 'Orange'], ['Brown', 'Brown', 'Orange'], 
+            ['Orange', 'Orange', 'Brown'], ['Brown', 'Orange', 'Brown'], 
+            ['Orange', 'Brown', 'Brown'], ['Brown', 'Brown', 'Brown']
+        ],
+        target: [
+            ['Brown', 'Orange', 'Orange'], ['Brown', 'Brown', 'Orange'], 
+            ['Brown', 'Orange', 'Brown'], ['Brown', 'Brown', 'Brown'], 
+            ['Brown', 'Orange', 'Orange'], ['Brown', 'Brown', 'Orange'], 
+            ['Brown', 'Orange', 'Brown'], ['Brown', 'Brown', 'Brown']
+        ]
+    },
+    '5.2': { 
+        name: 'Odd..', 
+        idealSteps: 2, 
+        chapter: 5,
+        initial: [
+            ['Orange', 'Orange', 'Orange'], ['Brown', 'Orange', 'Orange'], 
+            ['Orange', 'Brown', 'Orange'], ['Brown', 'Brown', 'Orange'], 
+            ['Orange', 'Orange', 'Brown'], ['Brown', 'Orange', 'Brown'], 
+            ['Orange', 'Brown', 'Brown'], ['Brown', 'Brown', 'Brown']
+        ],
+        target: [
+            ['Brown', 'Orange', 'Orange'], ['Brown', 'Brown', 'Orange'], 
+            ['Brown', 'Orange', 'Brown'], ['Brown', 'Brown', 'Brown']
+        ]
+    },
+    '5.3': { 
+        name: 'Zero', 
+        idealSteps: 3, 
+        chapter: 5,
+        initial: [
+            ['Orange', 'Orange', 'Orange'], ['Brown', 'Orange', 'Orange'], 
+            ['Orange', 'Brown', 'Orange'], ['Brown', 'Brown', 'Orange'], 
+            ['Orange', 'Orange', 'Brown'], ['Brown', 'Orange', 'Brown'], 
+            ['Orange', 'Brown', 'Brown'], ['Brown', 'Brown', 'Brown']
+        ],
+        target: [
+            ['Orange', 'Orange', 'Orange'], ['Orange', 'Orange', 'Orange'], 
+            ['Orange', 'Orange', 'Orange'], ['Orange', 'Orange', 'Orange'], 
+            ['Orange', 'Orange', 'Orange'], ['Orange', 'Orange', 'Orange'], 
+            ['Orange', 'Orange', 'Orange'], ['Orange', 'Orange', 'Orange']
+        ]
+    },
+    '5.4': { 
+        name: "Don't panic", 
+        idealSteps: 4, 
+        chapter: 5,
+        help: 'Este es el último nivel... por ahora. ¡Espero que hayas disfrutado el juego!',
+        initial: [
+            ['Orange', 'Orange', 'Orange'], ['Brown', 'Orange', 'Orange'], 
+            ['Orange', 'Brown', 'Orange'], ['Brown', 'Brown', 'Orange'], 
+            ['Orange', 'Orange', 'Brown'], ['Brown', 'Orange', 'Brown'], 
+            ['Orange', 'Brown', 'Brown'], ['Brown', 'Brown', 'Brown']
+        ],
+        target: [
+            ['Orange', 'Orange', 'Brown'], ['Orange', 'Brown', 'Orange'], 
+            ['Orange', 'Orange', 'Brown'], ['Orange', 'Brown', 'Orange'], 
+            ['Orange', 'Orange', 'Brown'], ['Orange', 'Brown', 'Orange'], 
+            ['Orange', 'Orange', 'Brown'], ['Orange', 'Brown', 'Orange']
+        ]
+    }
 };
 
 // Singleton

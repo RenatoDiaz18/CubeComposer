@@ -23,7 +23,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "directories": {
-    "doc": "docs"
+    "doc": "docs",
+    "test": "test"
   },
   "scripts": {
     "dev": "vite",

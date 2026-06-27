@@ -4,7 +4,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import './TauriBridge.js'; // Inicializa el puente con Tauri
-import gameState, { LEVEL_DATA } from './GameState.js';
+import gameState, { LEVEL_DATA, CHAPTER_TRANSFORMERS } from './GameState.js';
+import i18n from './I18n.js';
 
 // ============================================================================
 // CONFIGURACIÓN DE COLORES DE CUBOS
@@ -415,6 +416,28 @@ class CubeComposerEngine {
         console.log('[Engine] Demo wall renderizada');
     }
 
+    /**
+     * Renderiza un muro desde datos de PureScript.
+     * @param {Array} pureWall - Array de stacks, cada stack es array de strings de colores
+     * Ejemplo: [['Yellow', 'Red'], ['Red'], ['Yellow', 'Yellow', 'Red']]
+     */
+    renderWall(pureWall) {
+        if (!pureWall || !Array.isArray(pureWall)) {
+            console.warn('[Engine] pureWall inválido');
+            this.demoWall();
+            return;
+        }
+
+        // Convertir formato PureScript a formato del engine
+        const wallData = pureWall.map(stack => {
+            if (!Array.isArray(stack)) return [];
+            return stack.map((color, index) => ({ color, index }));
+        });
+
+        this.drawWall(wallData);
+        console.log(`[Engine] Muro PS renderizado: ${pureWall.length} stacks`);
+    }
+
     // ========================================================================
     // LOOP DE ANIMACIÓN
     // ========================================================================
@@ -467,6 +490,10 @@ class UIManager {
     }
 
     init() {
+        console.log('[UIManager] Iniciando init()...');
+        console.log('[UIManager] LEVEL_DATA disponible:', LEVEL_DATA);
+        console.log('[UIManager] Número de niveles:', Object.keys(LEVEL_DATA).length);
+        
         this.setupMenuListeners();
         this.setupLevelSelectorListeners();
         this.setupSettingsListeners();
@@ -479,7 +506,10 @@ class UIManager {
         gameState.on('levelCompleted', (data) => this.showSuccessModal(data));
         gameState.on('stepsChanged', (steps) => this.updateStepsDisplay(steps));
         
-        console.log('[UIManager] Inicializado');
+        // Pre-popular selector de niveles para que esté listo
+        this.populateLevelSelector();
+        
+        console.log('[UIManager] Inicializado completamente');
     }
 
     // ========================================================================
@@ -544,41 +574,58 @@ class UIManager {
 
     populateLevelSelector() {
         const container = document.getElementById('chapters-container');
-        if (!container) return;
+        console.log('[UIManager] populateLevelSelector - container:', container);
+        console.log('[UIManager] LEVEL_DATA:', LEVEL_DATA);
+        
+        if (!container) {
+            console.error('[UIManager] chapters-container no encontrado');
+            return;
+        }
 
         // Agrupar niveles por capítulo
         const chapters = {};
-        Object.entries(LEVEL_DATA).forEach(([id, data]) => {
-            if (!chapters[data.chapter]) {
-                chapters[data.chapter] = [];
+        const levelEntries = Object.entries(LEVEL_DATA);
+        console.log('[UIManager] Niveles encontrados:', levelEntries.length);
+        
+        levelEntries.forEach(([id, data]) => {
+            const chapterNum = data.chapter ?? 0;
+            if (!chapters[chapterNum]) {
+                chapters[chapterNum] = [];
             }
-            chapters[data.chapter].push({ id, ...data });
+            chapters[chapterNum].push({ id, ...data });
         });
+        
+        console.log('[UIManager] Capítulos agrupados:', chapters);
 
-        // Generar HTML
-        container.innerHTML = Object.entries(chapters).map(([chapterName, levels]) => `
-            <div class="chapter-section">
-                <h3 class="chapter-title">${chapterName}</h3>
-                <div class="levels-grid">
-                    ${levels.map(level => {
-                        const progress = gameState.getLevelProgress(level.id);
-                        const unlocked = gameState.isLevelUnlocked(level.id);
-                        return `
-                            <div class="level-card ${unlocked ? '' : 'locked'}" 
-                                 data-level-id="${level.id}"
-                                 ${unlocked ? '' : 'disabled'}>
-                                <div class="level-number">${level.id}</div>
-                                <div class="level-stars">
-                                    ${[1, 2, 3].map(i => `
-                                        <span class="star ${progress.stars >= i ? 'filled' : ''}">★</span>
-                                    `).join('')}
+        // Generar HTML con traducción para "Capítulo"
+        const chapterLabel = i18n.t('levels.chapter');
+        
+        container.innerHTML = Object.entries(chapters)
+            .sort(([a], [b]) => parseInt(a) - parseInt(b))
+            .map(([chapterNum, levels]) => `
+                <div class="chapter-section">
+                    <h3 class="chapter-title">${chapterLabel} ${chapterNum}</h3>
+                    <div class="levels-grid">
+                        ${levels.map(level => {
+                            const progress = gameState.getLevelProgress(level.id);
+                            const unlocked = gameState.isLevelUnlocked(level.id);
+                            return `
+                                <div class="level-card ${unlocked ? '' : 'locked'}" 
+                                     data-level-id="${level.id}"
+                                     ${unlocked ? '' : 'disabled'}>
+                                    <div class="level-number">${level.id}</div>
+                                    <div class="level-name">${level.name}</div>
+                                    <div class="level-stars">
+                                        ${[1, 2, 3].map(i => `
+                                            <span class="star ${progress.stars >= i ? 'filled' : ''}">★</span>
+                                        `).join('')}
+                                    </div>
                                 </div>
-                            </div>
-                        `;
-                    }).join('')}
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
 
         // Añadir listeners a las tarjetas de nivel
         container.querySelectorAll('.level-card:not(.locked)').forEach(card => {
@@ -601,24 +648,37 @@ class UIManager {
 
     setupSettingsListeners() {
         const themeToggle = document.getElementById('theme-toggle-settings');
-        const soundToggle = document.getElementById('sound-toggle');
         const languageSelect = document.getElementById('language-select');
         const closeBtn = document.getElementById('btn-close-settings');
 
+        // Binding: Toggle de tema oscuro
         themeToggle?.addEventListener('click', () => {
             themeToggle.classList.toggle('active');
             const isDark = themeToggle.classList.contains('active');
+            
+            // Alternar clase dark-mode en body
+            document.body.classList.remove('light-mode', 'dark-mode');
+            document.body.classList.add(isDark ? 'dark-mode' : 'light-mode');
+            
+            // Actualizar motor 3D y persistir
             gameState.setTheme(isDark ? 'dark' : 'light');
             this.engine.setTheme(isDark ? 'dark' : 'light');
         });
 
-        soundToggle?.addEventListener('click', () => {
-            soundToggle.classList.toggle('active');
-            gameState.setSound(soundToggle.classList.contains('active'));
-        });
-
+        // Binding: Selector de idiomas
         languageSelect?.addEventListener('change', (e) => {
-            gameState.setLanguage(e.target.value);
+            const langCode = e.target.value;
+            
+            // Actualizar i18n y todos los textos del DOM
+            i18n.setLanguage(langCode);
+            
+            // Persistir preferencia
+            gameState.setLanguage(langCode);
+            
+            // Re-popular selector de niveles si está visible
+            if (this.currentScreen === 'levelSelector') {
+                this.populateLevelSelector();
+            }
         });
 
         closeBtn?.addEventListener('click', () => {
@@ -628,27 +688,35 @@ class UIManager {
 
     applySettings() {
         const settings = gameState.settings;
+        console.log('[UIManager] Aplicando configuración:', settings);
         
         // Aplicar tema
+        const theme = settings.theme || 'dark';
         document.body.classList.remove('light-mode', 'dark-mode');
-        document.body.classList.add(`${settings.theme}-mode`);
-        this.engine.setTheme(settings.theme);
+        document.body.classList.add(`${theme}-mode`);
+        if (this.engine) {
+            this.engine.setTheme(theme);
+        }
         
-        // Actualizar toggles
+        // Actualizar toggle de tema - sincronizar con el estado actual
         const themeToggle = document.getElementById('theme-toggle-settings');
         if (themeToggle) {
-            themeToggle.classList.toggle('active', settings.theme === 'dark');
+            if (theme === 'dark') {
+                themeToggle.classList.add('active');
+            } else {
+                themeToggle.classList.remove('active');
+            }
         }
         
-        const soundToggle = document.getElementById('sound-toggle');
-        if (soundToggle) {
-            soundToggle.classList.toggle('active', settings.sound);
-        }
-        
+        // Aplicar idioma
+        const language = settings.language || 'es';
         const languageSelect = document.getElementById('language-select');
         if (languageSelect) {
-            languageSelect.value = settings.language;
+            languageSelect.value = language;
         }
+        i18n.setLanguage(language);
+        
+        console.log('[UIManager] Configuración aplicada - Tema:', theme, 'Idioma:', language);
     }
 
     // ========================================================================
@@ -747,9 +815,21 @@ class UIManager {
         });
 
         document.getElementById('game-theme-toggle')?.addEventListener('click', () => {
-            const newTheme = this.engine.toggleTheme();
+            // Toggle de tema desde el header del juego
+            const isDark = document.body.classList.contains('dark-mode');
+            const newTheme = isDark ? 'light' : 'dark';
+            
+            document.body.classList.remove('light-mode', 'dark-mode');
+            document.body.classList.add(`${newTheme}-mode`);
+            
+            this.engine.setTheme(newTheme);
             gameState.setTheme(newTheme);
-            this.applySettings();
+            
+            // Sincronizar toggle en settings si existe
+            const settingsToggle = document.getElementById('theme-toggle-settings');
+            if (settingsToggle) {
+                settingsToggle.classList.toggle('active', newTheme === 'dark');
+            }
         });
 
         document.getElementById('game-reset-camera')?.addEventListener('click', () => {
@@ -757,14 +837,7 @@ class UIManager {
         });
 
         document.getElementById('btn-reset-program')?.addEventListener('click', () => {
-            gameState.resetSteps();
-            // TODO: Limpiar programa
-        });
-
-        document.getElementById('btn-run-program')?.addEventListener('click', () => {
-            // TODO: Ejecutar programa
-            // Simulación de completar nivel
-            this.simulateCompleteLevel();
+            this.resetProgram();
         });
     }
 
@@ -775,6 +848,11 @@ class UIManager {
             return;
         }
 
+        // Cambiar nivel en PureScript
+        if (window.__PURE_FUNCTIONS__?.setLevel) {
+            window.__PURE_FUNCTIONS__.setLevel(levelId);
+        }
+
         gameState.startLevel(levelId, levelData);
         
         // Actualizar HUD
@@ -783,35 +861,421 @@ class UIManager {
         document.getElementById('hud-ideal').textContent = levelData.idealSteps;
         document.getElementById('hud-steps').textContent = '0';
 
-        // Mostrar tutorial para niveles nuevos (opcional)
-        // if (!gameState.isLevelCompleted(levelId)) {
-        //     this.showTutorial(levelData);
-        // } else {
-        this.showScreen('gameUI');
-        this.engine.demoWall(); // TODO: Cargar nivel real
-        // }
+        // Cargar datos del nivel y poblar UI
+        this.loadLevelUI(levelId, levelData);
 
+        this.showScreen('gameUI');
         console.log('[UIManager] Nivel iniciado:', levelId);
+    }
+
+    // Cargar datos del nivel y poblar UI
+    loadLevelUI(levelId, levelData) {
+        if (!levelData) {
+            console.warn('[UIManager] Datos del nivel no encontrados:', levelId);
+            this.engine.demoWall();
+            return;
+        }
+
+        console.log('[UIManager] Cargando nivel:', levelId, levelData);
+
+        // Renderizar el muro inicial
+        if (levelData.initial && this.engine) {
+            this.engine.renderWall(levelData.initial);
+        } else {
+            this.engine.demoWall();
+        }
+        
+        // Guardar target para verificación
+        this.currentTarget = levelData.target;
+        this.currentLevelId = levelId;
+        this.currentProgram = [];
+
+        // Renderizar el objetivo en la vista previa
+        console.log('[UIManager] Renderizando objetivo:', levelData.target);
+        this.renderGoalPreview(levelData.target);
+
+        // Obtener transformadores disponibles del capítulo
+        const chapterNum = levelData.chapter ?? 0;
+        const transformers = CHAPTER_TRANSFORMERS[chapterNum] || [];
+        console.log('[UIManager] Transformadores del capítulo', chapterNum, ':', transformers);
+        this.populateAvailableFunctions(transformers);
+        
+        // Limpiar programa anterior
+        this.updateProgramList();
+    }
+
+    // Renderizar vista previa del objetivo
+    renderGoalPreview(targetWall) {
+        const container = document.getElementById('goal-preview');
+        console.log('[UIManager] renderGoalPreview - container:', container, 'target:', targetWall);
+        
+        if (!container) {
+            console.error('[UIManager] Contenedor goal-preview no encontrado');
+            return;
+        }
+        
+        if (!targetWall || !Array.isArray(targetWall)) {
+            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Sin objetivo</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        
+        // Crear contenedor flex para los stacks
+        const wallDiv = document.createElement('div');
+        wallDiv.style.cssText = 'display: flex; gap: 4px; justify-content: center; align-items: flex-end; height: 100%; padding: 8px;';
+
+        // Color map
+        const colorMap = {
+            'Yellow': '#ffeb3b',
+            'Red': '#f44336',
+            'Cyan': '#00bcd4',
+            'Brown': '#795548',
+            'Orange': '#ff9800'
+        };
+
+        targetWall.forEach(stack => {
+            const stackDiv = document.createElement('div');
+            stackDiv.style.cssText = 'display: flex; flex-direction: column-reverse; gap: 2px;';
+            
+            if (Array.isArray(stack)) {
+                stack.forEach(color => {
+                    const cube = document.createElement('div');
+                    cube.style.cssText = `
+                        width: 16px;
+                        height: 16px;
+                        background: ${colorMap[color] || '#888'};
+                        border-radius: 2px;
+                        box-shadow: inset 1px 1px 0 rgba(255,255,255,0.3), inset -1px -1px 0 rgba(0,0,0,0.2);
+                    `;
+                    stackDiv.appendChild(cube);
+                });
+            }
+            
+            wallDiv.appendChild(stackDiv);
+        });
+
+        container.appendChild(wallDiv);
+        console.log('[UIManager] Objetivo renderizado con', targetWall.length, 'stacks');
+    }
+
+    // Poblar la lista de funciones disponibles
+    populateAvailableFunctions(transformers) {
+        const container = document.getElementById('available-functions');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (!transformers || transformers.length === 0) {
+            container.innerHTML = '<p class="no-functions">No hay funciones disponibles</p>';
+            return;
+        }
+
+        transformers.forEach(t => {
+            const btn = document.createElement('button');
+            btn.className = 'function-btn';
+            btn.dataset.transformerId = t.id;
+            btn.innerHTML = this.formatTransformerName(t.name);
+            btn.onclick = () => this.addTransformerToProgram(t.id, t.name);
+            container.appendChild(btn);
+        });
+    }
+
+    // Formatear nombre del transformador (convierte {Color} a spans coloreados)
+    formatTransformerName(name) {
+        return name
+            .replace(/\{Yellow\}/g, '<span class="cube-yellow">■</span>')
+            .replace(/\{Red\}/g, '<span class="cube-red">■</span>')
+            .replace(/\{Cyan\}/g, '<span class="cube-cyan">■</span>')
+            .replace(/\{Brown\}/g, '<span class="cube-brown">■</span>')
+            .replace(/\{Orange\}/g, '<span class="cube-orange">■</span>');
+    }
+
+    // Agregar transformador al programa
+    addTransformerToProgram(id, name) {
+        if (!this.currentProgram) this.currentProgram = [];
+        this.currentProgram.push({ id, name });
+        this.updateProgramList();
+        this.runProgram();
+        gameState.incrementSteps();
+    }
+
+    // Remover transformador del programa
+    removeTransformerFromProgram(index) {
+        if (!this.currentProgram) return;
+        this.currentProgram.splice(index, 1);
+        this.updateProgramList();
+        this.runProgram();
+    }
+
+    // Actualizar lista del programa actual
+    updateProgramList() {
+        const container = document.getElementById('program-list');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (!this.currentProgram || this.currentProgram.length === 0) {
+            container.innerHTML = '<p class="no-functions" style="color: var(--text-secondary); font-size: 0.8rem;">Arrastra funciones aquí</p>';
+            return;
+        }
+
+        this.currentProgram.forEach((t, index) => {
+            const item = document.createElement('div');
+            item.className = 'program-item';
+            item.innerHTML = `
+                <span>${this.formatTransformerName(t.name)}</span>
+                <button class="remove-btn" title="Quitar">×</button>
+            `;
+            item.querySelector('.remove-btn').onclick = () => this.removeTransformerFromProgram(index);
+            container.appendChild(item);
+        });
+    }
+
+    // Ejecutar el programa y actualizar el muro
+    runProgram() {
+        const levelId = this.currentLevelId;
+        const levelData = LEVEL_DATA[levelId];
+        if (!levelData || !levelData.initial) return;
+
+        // Aplicar transformadores en secuencia
+        let currentWall = JSON.parse(JSON.stringify(levelData.initial)); // Clonar
+
+        if (this.currentProgram) {
+            for (const t of this.currentProgram) {
+                currentWall = this.applyTransformer(currentWall, t.id);
+            }
+        }
+
+        // Renderizar el resultado
+        this.engine.renderWall(currentWall);
+
+        // Verificar si es la solución
+        if (this.checkWallsEqual(currentWall, levelData.target)) {
+            console.log('[UIManager] ¡Nivel completado!');
+            const steps = this.currentProgram?.length || 0;
+            setTimeout(() => {
+                gameState.completeLevel(levelId, steps, levelData.idealSteps);
+            }, 500);
+        }
+    }
+
+    // Aplicar un transformador a un muro
+    applyTransformer(wall, transformerId) {
+        // Transformadores que operan sobre todo el muro (no por stack)
+        switch (transformerId) {
+            case 'filterContainsR':
+                return wall.filter(stack => stack.includes('Red'));
+            case 'filterEven':
+                return wall.filter(stack => this.stackToInt(stack) % 2 === 0);
+            case 'stackEqualColumns':
+                return this.stackEqualColumns(wall);
+            case 'partitionContainsC':
+                return this.partitionContains(wall, 'Cyan');
+            case 'partitionContainsR':
+                return this.partitionContains(wall, 'Red');
+        }
+        
+        // Transformadores que operan por stack
+        const newWall = wall.map(stack => {
+            switch (transformerId) {
+                // === Chapter 0: Reemplazos simples ===
+                case 'replaceYbyR':
+                    return stack.map(c => c === 'Yellow' ? 'Red' : c);
+                
+                // === Chapter 1 ===
+                case 'mapYtoYR':
+                    return stack.flatMap(c => c === 'Yellow' ? ['Yellow', 'Red'] : [c]);
+                case 'mapCtoRC':
+                    return stack.flatMap(c => c === 'Cyan' ? ['Red', 'Cyan'] : [c]);
+                case 'mapReverse':
+                    return [...stack].reverse();
+                
+                // === Chapter 2 ===
+                case 'replaceYbyB':
+                    return stack.map(c => c === 'Yellow' ? 'Brown' : c);
+                case 'replaceYbyBY':
+                    return stack.flatMap(c => c === 'Yellow' ? ['Brown', 'Yellow'] : [c]);
+                case 'replaceBbyOO':
+                    return stack.flatMap(c => c === 'Brown' ? ['Orange', 'Orange'] : [c]);
+                
+                // === Chapter 3: Wildcards ===
+                case 'mapXtoOX':
+                    return stack.flatMap(c => ['Orange', c]);
+                case 'mapCXtoX':
+                    return this.mapCXtoX(stack);
+                case 'mapOOtoC':
+                    return this.mapOOtoC(stack);
+                case 'mapCtoO':
+                    return stack.map(c => c === 'Cyan' ? 'Orange' : c);
+                
+                // === Chapter 4 ===
+                case 'replaceRbyC':
+                    return stack.map(c => c === 'Red' ? 'Cyan' : c);
+                case 'replaceCbyY':
+                    return stack.map(c => c === 'Cyan' ? 'Yellow' : c);
+                
+                // === Chapter 5: Binary arithmetic ===
+                case 'mapAdd1':
+                    return this.intToStack((this.stackToInt(stack) + 1) % 8);
+                case 'mapSub1':
+                    return this.intToStack((this.stackToInt(stack) - 1 + 8) % 8);
+                case 'mapMul2':
+                    return this.intToStack((this.stackToInt(stack) * 2) % 8);
+                case 'mapPow2':
+                    return this.intToStack((this.stackToInt(stack) ** 2) % 8);
+                
+                // === Reemplazos múltiples originales ===
+                case 'replaceYbyYR':
+                    return stack.flatMap(c => c === 'Yellow' ? ['Yellow', 'Red'] : [c]);
+                
+                // === Stacks (agregar cubo arriba) ===
+                case 'stackY':
+                    return [...stack, 'Yellow'];
+                case 'stackO':
+                    return [...stack, 'Orange'];
+                case 'stackR':
+                    return [...stack, 'Red'];
+                case 'stackC':
+                    return [...stack, 'Cyan'];
+                case 'stackB':
+                    return [...stack, 'Brown'];
+                
+                // === Rechazos (filtrar color) ===
+                case 'rejectY':
+                    return stack.filter(c => c !== 'Yellow');
+                case 'rejectO':
+                    return stack.filter(c => c !== 'Orange');
+                case 'rejectR':
+                    return stack.filter(c => c !== 'Red');
+                case 'rejectC':
+                    return stack.filter(c => c !== 'Cyan');
+                case 'rejectB':
+                    return stack.filter(c => c !== 'Brown');
+                
+                default:
+                    console.warn('[UIManager] Transformador desconocido:', transformerId);
+                    return stack;
+            }
+        });
+        return newWall;
+    }
+    
+    // Helper: Chapter 3 - map [{X}{Cyan}]↦{X} (remover Cyan después de cualquier color)
+    mapCXtoX(stack) {
+        const result = [];
+        for (let i = 0; i < stack.length; i++) {
+            if (stack[i] === 'Cyan' && i > 0) {
+                // Skip Cyan that comes after another color
+                continue;
+            }
+            if (i < stack.length - 1 && stack[i + 1] === 'Cyan') {
+                result.push(stack[i]);
+                i++; // Skip next Cyan
+            } else {
+                result.push(stack[i]);
+            }
+        }
+        return result;
+    }
+    
+    // Helper: Chapter 3 - map [{Orange}{Orange}]↦{Cyan}
+    mapOOtoC(stack) {
+        const result = [];
+        for (let i = 0; i < stack.length; i++) {
+            if (stack[i] === 'Orange' && stack[i + 1] === 'Orange') {
+                result.push('Cyan');
+                i++; // Skip next Orange
+            } else {
+                result.push(stack[i]);
+            }
+        }
+        return result;
+    }
+    
+    // Helper: Chapter 2 - stackEqualColumns (apila columnas adyacentes iguales)
+    stackEqualColumns(wall) {
+        if (wall.length === 0) return wall;
+        const result = [];
+        let current = [...wall[0]];
+        
+        for (let i = 1; i < wall.length; i++) {
+            if (this.arraysEqual(wall[i], wall[i - 1])) {
+                // Columnas iguales: apilar
+                current = [...current, ...wall[i]];
+            } else {
+                result.push(current);
+                current = [...wall[i]];
+            }
+        }
+        result.push(current);
+        return result;
+    }
+    
+    // Helper: Chapter 4 - partition (contains color)
+    partitionContains(wall, color) {
+        const withColor = wall.filter(stack => stack.includes(color));
+        const withoutColor = wall.filter(stack => !stack.includes(color));
+        return [...withoutColor, ...withColor];
+    }
+    
+    // Helper: Chapter 5 - Binary conversion (Orange=0, Brown=1)
+    stackToInt(stack) {
+        let value = 0;
+        if (stack[0] === 'Brown') value += 1;
+        if (stack[1] === 'Brown') value += 2;
+        if (stack[2] === 'Brown') value += 4;
+        return value;
+    }
+    
+    intToStack(n) {
+        return [
+            (n & 1) ? 'Brown' : 'Orange',
+            (n & 2) ? 'Brown' : 'Orange',
+            (n & 4) ? 'Brown' : 'Orange'
+        ];
+    }
+    
+    arraysEqual(a, b) {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
+
+    // Comparar dos muros
+    checkWallsEqual(wall1, wall2) {
+        if (!wall1 || !wall2) return false;
+        if (wall1.length !== wall2.length) return false;
+        
+        for (let i = 0; i < wall1.length; i++) {
+            if (wall1[i].length !== wall2[i].length) return false;
+            for (let j = 0; j < wall1[i].length; j++) {
+                if (wall1[i][j] !== wall2[i][j]) return false;
+            }
+        }
+        return true;
+    }
+
+    // Resetear el programa del nivel actual
+    resetProgram() {
+        this.currentProgram = [];
+        gameState.resetSteps();
+        this.updateProgramList();
+        
+        // Volver a renderizar el muro inicial
+        const levelData = LEVEL_DATA[this.currentLevelId];
+        if (levelData?.initial) {
+            this.engine.renderWall(levelData.initial);
+        }
+        
+        console.log('[UIManager] Programa reseteado');
     }
 
     updateStepsDisplay(steps) {
         const el = document.getElementById('hud-steps');
         if (el) el.textContent = steps;
-    }
-
-    // Simulación temporal para demostración
-    simulateCompleteLevel() {
-        const levelId = gameState.currentLevel?.id || '0.1';
-        const levelData = LEVEL_DATA[levelId] || { idealSteps: 2 };
-        const steps = gameState.incrementSteps(); // Simular 1 paso
-        
-        // Simular varios pasos
-        for (let i = 0; i < Math.floor(Math.random() * 3); i++) {
-            gameState.incrementSteps();
-        }
-        
-        const finalSteps = gameState.getCurrentSteps();
-        gameState.completeLevel(levelId, finalSteps, levelData.idealSteps);
     }
 }
 

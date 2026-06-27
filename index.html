@@ -105,6 +105,7 @@
                 justify-content: space-between;
                 align-items: center;
                 background: linear-gradient(to bottom, var(--ui-bg), transparent);
+                z-index: 50;
             }
 
             .game-title {
@@ -161,6 +162,7 @@
                 border-radius: 12px;
                 padding: 20px;
                 backdrop-filter: blur(10px);
+                z-index: 50;
             }
 
             .ui-sidebar h3 {
@@ -170,6 +172,88 @@
                 letter-spacing: 0.5px;
                 color: var(--text-secondary);
                 margin-bottom: 12px;
+            }
+
+            /* Botones de funciones disponibles */
+            #available-functions {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            .function-btn {
+                padding: 10px 14px;
+                background: var(--bg-secondary);
+                border: 1px solid var(--ui-border);
+                border-radius: 8px;
+                color: var(--text-primary);
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.85rem;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                text-align: left;
+            }
+
+            .function-btn:hover {
+                background: var(--accent-color);
+                border-color: var(--accent-color);
+                transform: translateX(4px);
+            }
+
+            .function-btn:active {
+                transform: scale(0.98);
+            }
+
+            /* Lista del programa */
+            #program-list {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                min-height: 60px;
+                padding: 12px;
+                background: var(--bg-secondary);
+                border: 1px dashed var(--ui-border);
+                border-radius: 8px;
+            }
+
+            .program-item {
+                padding: 8px 12px;
+                background: var(--ui-bg);
+                border: 1px solid var(--ui-border);
+                border-radius: 6px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.8rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .program-item .remove-btn {
+                background: none;
+                border: none;
+                color: var(--text-secondary);
+                cursor: pointer;
+                padding: 2px 6px;
+                font-size: 1rem;
+            }
+
+            .program-item .remove-btn:hover {
+                color: #f44336;
+            }
+
+            /* Colores de cubos en texto */
+            .cube-yellow { color: var(--cube-yellow); font-size: 1.1em; }
+            .cube-red { color: var(--cube-red); font-size: 1.1em; }
+            .cube-cyan { color: var(--cube-cyan); font-size: 1.1em; }
+            .cube-brown { color: var(--cube-brown); font-size: 1.1em; }
+            .cube-orange { color: var(--cube-orange); font-size: 1.1em; }
+
+            .no-functions {
+                color: var(--text-secondary);
+                font-size: 0.85rem;
+                text-align: center;
+                padding: 12px;
             }
 
             /* Level selector */
@@ -197,6 +281,7 @@
                 padding: 16px 20px;
                 backdrop-filter: blur(10px);
                 font-size: 0.875rem;
+                z-index: 50;
             }
 
             .info-panel .status {
@@ -404,7 +489,16 @@
             .level-number {
                 font-size: 1.25rem;
                 font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+            .level-name {
+                font-size: 0.75rem;
+                color: var(--text-secondary);
                 margin-bottom: 8px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .level-stars {
@@ -644,6 +738,7 @@
                 border-radius: 12px;
                 padding: 16px 20px;
                 backdrop-filter: blur(10px);
+                z-index: 50;
             }
 
             .hud-level {
@@ -693,13 +788,13 @@
         <div id="main-menu" class="modal-overlay show">
             <div class="menu-container">
                 <div class="menu-logo">
-                    <h1>Cube Composer</h1>
-                    <p>Un juego de puzzles inspirado en programación funcional</p>
+                    <h1 data-i18n="app.title">Cube Composer</h1>
+                    <p data-i18n="app.subtitle">Un juego de puzzles inspirado en programación funcional</p>
                 </div>
                 <div class="menu-buttons">
-                    <button id="btn-play" class="menu-btn menu-btn-primary">▶ Jugar</button>
-                    <button id="btn-settings" class="menu-btn">⚙ Configuración</button>
-                    <button id="btn-exit" class="menu-btn">✕ Salir</button>
+                    <button id="btn-play" class="menu-btn menu-btn-primary" data-i18n="menu.play">▶ Jugar</button>
+                    <button id="btn-settings" class="menu-btn" data-i18n="menu.settings">⚙ Configuración</button>
+                    <button id="btn-exit" class="menu-btn" data-i18n="menu.exit">✕ Salir</button>
                 </div>
             </div>
         </div>
@@ -710,13 +805,13 @@
         <div id="level-selector" class="modal-overlay">
             <div class="modal-content level-selector-content">
                 <div class="modal-header">
-                    <h2>Seleccionar Nivel</h2>
-                    <p>Completa niveles para desbloquear nuevos desafíos</p>
+                    <h2 data-i18n="levels.title">Seleccionar Nivel</h2>
+                    <p data-i18n="levels.subtitle">Completa niveles para desbloquear nuevos desafíos</p>
                 </div>
                 <div id="chapters-container">
                     <!-- Se genera dinámicamente -->
                 </div>
-                <button id="btn-back-menu" class="menu-btn back-btn">← Volver al Menú</button>
+                <button id="btn-back-menu" class="menu-btn back-btn" data-i18n="levels.back">← Volver al Menú</button>
             </div>
         </div>
 
@@ -726,10 +821,10 @@
         <div id="settings-modal" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Configuración</h2>
+                    <h2 data-i18n="settings.title">Configuración</h2>
                 </div>
                 <div class="settings-group">
-                    <label class="settings-label">Idioma</label>
+                    <label class="settings-label" data-i18n="settings.language">Idioma</label>
                     <select id="language-select" class="settings-select">
                         <option value="es">Español</option>
                         <option value="en">English</option>
@@ -737,17 +832,11 @@
                 </div>
                 <div class="settings-group">
                     <div class="settings-toggle">
-                        <span class="settings-label">Tema Oscuro</span>
+                        <span class="settings-label" data-i18n="settings.darkTheme">Tema Oscuro</span>
                         <div id="theme-toggle-settings" class="toggle-switch active"></div>
                     </div>
                 </div>
-                <div class="settings-group">
-                    <div class="settings-toggle">
-                        <span class="settings-label">Sonido</span>
-                        <div id="sound-toggle" class="toggle-switch active"></div>
-                    </div>
-                </div>
-                <button id="btn-close-settings" class="menu-btn" style="margin-top: 20px;">Guardar y Cerrar</button>
+                <button id="btn-close-settings" class="menu-btn" style="margin-top: 20px;" data-i18n="settings.save">Guardar y Cerrar</button>
             </div>
         </div>
 
@@ -757,13 +846,13 @@
         <div id="tutorial-modal" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 id="tutorial-title">Nueva Función</h2>
-                    <p id="tutorial-subtitle">Aprende a usar esta transformación</p>
+                    <h2 id="tutorial-title" data-i18n="tutorial.title">Nueva Función</h2>
+                    <p id="tutorial-subtitle" data-i18n="tutorial.subtitle">Aprende a usar esta transformación</p>
                 </div>
                 <div class="tutorial-function">
                     <span id="tutorial-function-name" class="tutorial-function-name">map {Yellow}↦{Red}</span>
                 </div>
-                <p id="tutorial-description" class="tutorial-instructions">
+                <p id="tutorial-description" class="tutorial-instructions" data-i18n="tutorial.description">
                     Esta función transforma todos los cubos amarillos en cubos rojos.
                     Pruébala en el ejemplo de abajo.
                 </p>
@@ -771,8 +860,8 @@
                     <canvas id="tutorial-canvas"></canvas>
                 </div>
                 <div class="tutorial-actions">
-                    <button id="btn-apply-tutorial" class="tutorial-btn">Aplicar Función</button>
-                    <button id="btn-start-level" class="tutorial-btn tutorial-btn-primary" disabled>Comenzar Nivel</button>
+                    <button id="btn-apply-tutorial" class="tutorial-btn" data-i18n="tutorial.apply">Aplicar Función</button>
+                    <button id="btn-start-level" class="tutorial-btn tutorial-btn-primary" disabled data-i18n="tutorial.start">Comenzar Nivel</button>
                 </div>
             </div>
         </div>
@@ -783,17 +872,17 @@
         <div id="success-modal" class="modal-overlay success-overlay">
             <div class="modal-content success-content">
                 <div class="success-icon">🎉</div>
-                <h2 class="success-title">¡Nivel Completado!</h2>
+                <h2 class="success-title" data-i18n="success.title">¡Nivel Completado!</h2>
                 <p id="success-level-name" class="success-subtitle">Transformación</p>
                 <div class="success-stars">
                     <span id="star-1" class="success-star">★</span>
                     <span id="star-2" class="success-star">★</span>
                     <span id="star-3" class="success-star">★</span>
                 </div>
-                <p id="success-stats" class="success-stats">Movimientos: 3 / Ideal: 2</p>
+                <p id="success-stats" class="success-stats"></p>
                 <div class="success-actions">
-                    <button id="btn-replay" class="menu-btn">↺ Reintentar</button>
-                    <button id="btn-next-level" class="menu-btn menu-btn-primary">Siguiente →</button>
+                    <button id="btn-replay" class="menu-btn" data-i18n="success.retry">↺ Reintentar</button>
+                    <button id="btn-next-level" class="menu-btn menu-btn-primary" data-i18n="success.next">Siguiente →</button>
                 </div>
             </div>
         </div>
@@ -805,53 +894,52 @@
             <!-- Header del juego -->
             <header class="ui-header">
                 <div>
-                    <button id="btn-back-levels" class="ui-btn">← Niveles</button>
+                    <button id="btn-back-levels" class="ui-btn" data-i18n="game.backLevels">← Niveles</button>
                 </div>
-                <h1 class="game-title">Cube Composer</h1>
+                <h1 class="game-title" data-i18n="app.title">Cube Composer</h1>
                 <div class="ui-controls">
-                    <button id="game-theme-toggle" class="ui-btn ui-btn-icon" title="Cambiar tema">
+                    <button id="game-theme-toggle" class="ui-btn ui-btn-icon" data-i18n-title="game.toggleTheme" title="Cambiar tema">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
                         </svg>
                     </button>
-                    <button id="game-reset-camera" class="ui-btn">Reset Cámara</button>
+                    <button id="game-reset-camera" class="ui-btn" data-i18n="game.resetCamera">Reset Cámara</button>
                 </div>
             </header>
 
             <!-- HUD del nivel -->
             <div class="game-hud">
-                <div class="hud-level">Nivel <span id="hud-level-id">0.1</span></div>
+                <div class="hud-level"><span data-i18n="game.level">Nivel</span> <span id="hud-level-id">0.1</span></div>
                 <div id="hud-level-name" class="hud-name">Transformación</div>
                 <div class="hud-stats">
                     <div class="hud-stat">
                         <span class="hud-stat-icon">📊</span>
-                        <span>Movimientos: <strong id="hud-steps">0</strong></span>
+                        <span><span data-i18n="game.moves">Movimientos</span>: <strong id="hud-steps">0</strong></span>
                     </div>
                     <div class="hud-stat">
                         <span class="hud-stat-icon">⭐</span>
-                        <span>Ideal: <strong id="hud-ideal">2</strong></span>
+                        <span><span data-i18n="game.ideal">Ideal</span>: <strong id="hud-ideal">2</strong></span>
                     </div>
                 </div>
             </div>
 
             <!-- Sidebar del juego -->
             <aside class="ui-sidebar">
-                <h3>Objetivo</h3>
+                <h3 data-i18n="game.goal">Objetivo</h3>
                 <div id="goal-preview" class="tutorial-preview" style="height: 100px; margin-bottom: 16px;"></div>
                 
-                <h3>Funciones Disponibles</h3>
+                <h3 data-i18n="game.availableFunctions">Funciones Disponibles</h3>
                 <div id="available-functions">
                     <!-- Se genera dinámicamente -->
                 </div>
                 
-                <h3 style="margin-top: 16px;">Tu Programa</h3>
+                <h3 style="margin-top: 16px;" data-i18n="game.yourProgram">Tu Programa</h3>
                 <div id="program-list">
                     <!-- Se genera dinámicamente -->
                 </div>
                 
-                <div style="margin-top: 16px; display: flex; gap: 8px;">
-                    <button id="btn-reset-program" class="ui-btn" style="flex: 1;">↺ Reset</button>
-                    <button id="btn-run-program" class="ui-btn" style="flex: 1; background: var(--accent-color); border-color: var(--accent-color); color: white;">▶ Ejecutar</button>
+                <div style="margin-top: 16px;">
+                    <button id="btn-reset-program" class="ui-btn" style="width: 100%;" data-i18n="game.reset">↺ Reset</button>
                 </div>
             </aside>
 
@@ -859,7 +947,7 @@
             <div class="info-panel">
                 <div class="status">
                     <span class="status-dot"></span>
-                    <span id="engine-status">Motor 3D activo</span>
+                    <span id="engine-status" data-i18n="game.engineActive">Motor 3D activo</span>
                 </div>
             </div>
         </div>
